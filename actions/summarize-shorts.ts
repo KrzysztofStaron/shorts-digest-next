@@ -20,44 +20,26 @@ function extractVideoId(rawUrl: string): string | null {
 }
 
 async function fetchTranscriptTextFromServer(videoId: string): Promise<string> {
-  const base = process.env.TRANSCRIPT_SERVER_URL || "http://127.0.0.1:8000";
+  const base = process.env.TRANSCRIPT_SERVER_URL || "http://127.0.0.1:5000";
 
-  // Try txt first
-  const urlTxt = new URL("/transcript", base);
-  urlTxt.searchParams.set("id", videoId);
-  urlTxt.searchParams.set("format", "txt");
-  ["en", "en-US", "en-GB"].forEach(lang => urlTxt.searchParams.append("lang", lang));
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
   try {
-    const res = await fetch(urlTxt.toString(), { next: { revalidate: 0 } });
-    if (res.ok) {
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const data = await res.json();
-        if (Array.isArray((data as any)?.snippets)) {
-          return ((data as any).snippets as any[]).map((s: any) => s.text).join(" ");
-        }
-        return "";
-      }
-      const body = (await res.text()).trim();
-      return body;
-    }
-  } catch {
-    // continue to JSON fallback
-  }
+    const res = await fetch(`${base}/transcribe`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        youtube_url: youtubeUrl,
+      }),
+      next: { revalidate: 0 },
+    });
 
-  // Fallback to JSON
-  const urlJson = new URL("/transcript", base);
-  urlJson.searchParams.set("id", videoId);
-  urlJson.searchParams.set("format", "json");
-  ["en", "en-US", "en-GB"].forEach(lang => urlJson.searchParams.append("lang", lang));
-
-  try {
-    const res = await fetch(urlJson.toString(), { next: { revalidate: 0 } });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray((data as any)?.snippets)) {
-        return ((data as any).snippets as any[]).map((s: any) => s.text).join(" ");
+      if (data.success && data.transcript) {
+        return data.transcript.trim();
       }
     }
   } catch {
