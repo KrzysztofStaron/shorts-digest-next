@@ -282,7 +282,7 @@ def _parse_args():
 if __name__ == '__main__':
     args = _parse_args()
 
-    default_port = int(os.getenv("PORT", "5000"))
+    default_port = int(os.getenv("PORT", "1000"))
     default_host = os.getenv("HOST", "0.0.0.0")
     debug_env = _env_bool("FLASK_DEBUG", True)
 
