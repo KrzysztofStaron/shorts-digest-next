@@ -8,27 +8,51 @@ import { Suspense } from "react";
 import ImageFromPrompt from "./components/ImageFromPrompt";
 
 function emphasizeKeywordsFromMarkup(text: string) {
-  // Replace ***highlight*** sequences with orange-highlighted markup
-  const parts: Array<string | ReactNode> = [];
-  const regex = /(\*\*\*[\s\S]*?\*\*\*)/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(text))) {
-    const start = match.index;
-    const end = start + match[0].length;
-    if (start > lastIndex) parts.push(text.slice(lastIndex, start));
-    const inner = match[0].slice(3, -3);
-    parts.push(
-      <mark key={`${start}-${end}`} className="bg-orange-100 text-slate-900 px-1 rounded">
-        <strong>
-          <em>{inner}</em>
-        </strong>
-      </mark>
-    );
-    lastIndex = end;
-  }
-  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
-  return parts.length > 0 ? parts : [text];
+  // Inline renderer for ***highlight*** and **bold**
+  // Processes in two passes to avoid nesting issues: first *** then **
+  const processPattern = (
+    inputs: Array<string | ReactNode>,
+    pattern: RegExp,
+    wrap: (content: string, key: string) => ReactNode
+  ): Array<string | ReactNode> => {
+    const outputs: Array<string | ReactNode> = [];
+    inputs.forEach((segment, idx) => {
+      if (typeof segment !== "string") {
+        outputs.push(segment);
+        return;
+      }
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
+      pattern.lastIndex = 0;
+      while ((match = pattern.exec(segment))) {
+        const start = match.index;
+        const end = start + match[0].length;
+        if (start > lastIndex) outputs.push(segment.slice(lastIndex, start));
+        const inner = match[1];
+        outputs.push(wrap(inner, `${idx}-${start}-${end}`));
+        lastIndex = end;
+      }
+      if (lastIndex < segment.length) outputs.push(segment.slice(lastIndex));
+    });
+    return outputs;
+  };
+
+  // Start with raw text as a single segment
+  let parts: Array<string | ReactNode> = [text];
+
+  // ***highlight***
+  parts = processPattern(parts, /\*\*\*([\s\S]*?)\*\*\*/g, (content, key) => (
+    <mark key={`hl-${key}`} className="bg-orange-100 text-slate-900 px-1 rounded">
+      <strong>
+        <em>{content}</em>
+      </strong>
+    </mark>
+  ));
+
+  // **bold**
+  parts = processPattern(parts, /\*\*([\s\S]*?)\*\*/g, (content, key) => <strong key={`b-${key}`}>{content}</strong>);
+
+  return parts;
 }
 
 function renderSummaryMarkdown(summary: string) {
@@ -106,8 +130,34 @@ function renderSummaryMarkdown(summary: string) {
       return;
     }
 
-    if (/^[-\u2013\u2014*]\s+/.test(line)) {
-      const content = line.replace(/^[-\u2013\u2014*]\s+/, "");
+    // ATX-style headings: #, ##, ### ...
+    const atx = line.match(/^(#{1,6})\s+(.*)$/);
+    if (atx) {
+      flushList();
+      const headingText = atx[2].replace(/:$/, "");
+      elements.push(
+        <h3 key={`h-atx-${idx}`} className="text-slate-800 font-semibold mt-6 mb-2">
+          {emphasizeKeywordsFromMarkup(headingText)}
+        </h3>
+      );
+      return;
+    }
+
+    // Bold heading like **Section:**
+    const boldHeading = line.match(/^\*\*(.+?)\*\*:?$/);
+    if (boldHeading) {
+      flushList();
+      elements.push(
+        <h3 key={`h-bold-${idx}`} className="text-slate-800 font-semibold mt-6 mb-2">
+          {emphasizeKeywordsFromMarkup(boldHeading[1])}
+        </h3>
+      );
+      return;
+    }
+
+    // Bulleted or numbered list items
+    if (/^[-\u2013\u2014*]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+      const content = line.replace(/^(?:[-\u2013\u2014*]|\d+\.)\s+/, "");
       listItems.push(
         <li key={`li-${idx}`} className="leading-relaxed">
           {emphasizeKeywordsFromMarkup(content)}
@@ -120,7 +170,7 @@ function renderSummaryMarkdown(summary: string) {
     if (line.endsWith(":")) {
       elements.push(
         <h3 key={`h3-${idx}`} className="text-slate-800 font-semibold mt-6 mb-2">
-          {line.replace(/:$/, "")}
+          {emphasizeKeywordsFromMarkup(line.replace(/:$/, ""))}
         </h3>
       );
     } else {
