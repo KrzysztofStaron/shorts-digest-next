@@ -211,7 +211,7 @@ export default async function Page() {
             </h1>
           </div>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Transform YouTube videos into actionable insights. Powered by AI transcription and intelligent
+            Transform YouTube videos into actionable insights. <br /> Powered by Speech to text and intelligent
             summarization.
           </p>
         </header>
@@ -343,14 +343,14 @@ export default async function Page() {
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-lime-500 rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-800 mb-2">Lightning Fast</h3>
+              <h3 className="font-semibold text-slate-800 mb-2">Optimized for Actionability</h3>
               <p className="text-sm text-slate-600">
-                Server-side processing ensures quick results with no client-side API keys needed.
+                Notes are crafted to highlight practical insights, and clear takeaways
               </p>
             </div>
           </section>
