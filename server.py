@@ -105,6 +105,8 @@ def transcribe_audio():
                 audio_path = os.path.join(temp_dir, "audio.mp3")
                 result = subprocess.run([
                     "yt-dlp", "-x", "--audio-format", "mp3", 
+                    "--audio-quality", "9",  # Lowest quality (0=best, 9=worst)
+                    "-f", "worstaudio",  # Select worst quality audio stream
                     "-o", audio_path, youtube_url
                 ], check=True, capture_output=True, text=True)
                 print(f"yt-dlp completed successfully")
