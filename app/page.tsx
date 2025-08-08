@@ -2,7 +2,9 @@ import { cookies } from "next/headers";
 import { summarizeShorts } from "@/actions/summarize-shorts";
 import InputUrl from "./components/InputUrl";
 import ButtonSubmitGenerate from "./components/ButtonSubmitGenerate";
+import ButtonExportPdf from "./components/ButtonExportPdf";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import ImageFromPrompt from "./components/ImageFromPrompt";
 
 function emphasizeKeywordsFromMarkup(text: string) {
@@ -75,7 +77,15 @@ function renderSummaryMarkdown(summary: string) {
         const prompt = match[2];
         rowChildren.push(
           <div key={`img-${idx}-${start}`} className="my-4">
-            <ImageFromPrompt alt={alt} prompt={prompt} />
+            <Suspense
+              fallback={
+                <div className="w-full max-w-md h-64 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center animate-pulse text-slate-500">
+                  Generating image...
+                </div>
+              }
+            >
+              <ImageFromPrompt alt={alt} prompt={prompt} />
+            </Suspense>
           </div>
         );
         lastIndex = end;
@@ -134,9 +144,9 @@ export default async function Page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8 print:px-0 print:py-0">
         {/* Header */}
-        <header className="text-center mb-12">
+        <header className="text-center mb-12 print:hidden">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="relative">
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -157,7 +167,7 @@ export default async function Page() {
         </header>
 
         {/* Main Form */}
-        <section className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-8">
+        <section className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-8 print:hidden">
           <form action={summarizeShorts} className="space-y-6">
             <div className="space-y-3">
               <label htmlFor="url" className="block text-sm font-semibold text-slate-700">
@@ -227,6 +237,9 @@ export default async function Page() {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-slate-800">AI Summary Generated</h2>
+                <div className="ml-auto">
+                  <ButtonExportPdf />
+                </div>
               </div>
             </div>
 
@@ -245,7 +258,7 @@ export default async function Page() {
 
         {/* Features */}
         {!lastSummary && !lastError && (
-          <section className="grid md:grid-cols-3 gap-6 mt-12">
+          <section className="grid md:grid-cols-3 gap-6 mt-12 print:hidden">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,7 +308,7 @@ export default async function Page() {
         )}
 
         {/* Footer */}
-        <footer className="mt-16 text-center">
+        <footer className="mt-16 text-center print:hidden">
           <div className="inline-flex items-center gap-2 text-sm text-slate-500 bg-white rounded-full px-6 py-3 shadow-sm border border-slate-200">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

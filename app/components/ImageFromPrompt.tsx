@@ -1,3 +1,5 @@
+"use server";
+
 import OpenAI from "openai";
 
 type Props = {
