@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import OpenAI from "openai";
-import { YoutubeTranscript } from "youtube-transcript";
 
 function extractVideoId(rawUrl: string): string | null {
   try {
@@ -20,9 +19,52 @@ function extractVideoId(rawUrl: string): string | null {
   }
 }
 
-async function fetchTranscriptText(videoId: string): Promise<string> {
-  const segments = await YoutubeTranscript.fetchTranscript(videoId);
-  return segments.map((s: { text: string }) => s.text).join(" ");
+async function fetchTranscriptTextFromServer(videoId: string): Promise<string> {
+  const base = process.env.TRANSCRIPT_SERVER_URL || "http://127.0.0.1:8000";
+
+  // Try txt first
+  const urlTxt = new URL("/transcript", base);
+  urlTxt.searchParams.set("id", videoId);
+  urlTxt.searchParams.set("format", "txt");
+  ["en", "en-US", "en-GB"].forEach(lang => urlTxt.searchParams.append("lang", lang));
+
+  try {
+    const res = await fetch(urlTxt.toString(), { next: { revalidate: 0 } });
+    if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (Array.isArray((data as any)?.snippets)) {
+          return ((data as any).snippets as any[]).map((s: any) => s.text).join(" ");
+        }
+        return "";
+      }
+      const body = (await res.text()).trim();
+      return body;
+    }
+  } catch {
+    // continue to JSON fallback
+  }
+
+  // Fallback to JSON
+  const urlJson = new URL("/transcript", base);
+  urlJson.searchParams.set("id", videoId);
+  urlJson.searchParams.set("format", "json");
+  ["en", "en-US", "en-GB"].forEach(lang => urlJson.searchParams.append("lang", lang));
+
+  try {
+    const res = await fetch(urlJson.toString(), { next: { revalidate: 0 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray((data as any)?.snippets)) {
+        return ((data as any).snippets as any[]).map((s: any) => s.text).join(" ");
+      }
+    }
+  } catch {
+    // ignored
+  }
+
+  return "";
 }
 
 export async function summarizeShorts(formData: FormData): Promise<void> {
@@ -48,7 +90,7 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
 
   let transcriptText = "";
   try {
-    transcriptText = await fetchTranscriptText(videoId);
+    transcriptText = await fetchTranscriptTextFromServer(videoId);
   } catch {
     // ignored
   }
@@ -83,7 +125,7 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
     "- 3–7 concise, imperative bullets focused only on concrete, actionable steps or key insights.",
     "",
     "Rules:",
-    '\n- Bullets only (use "- "), no intro or outro.',
+    '- Bullets only (use "- "), no intro or outro.',
     "- No fluff, no repetition, no emojis, no links.",
     "- Be specific and practical.",
     "",

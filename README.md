@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a Next.js project.
 
-## Getting Started
+## Transcript HTTP server
 
-First, run the development server:
+This repo includes a small Flask-based transcript service in `serve.py` that the Next.js server-actions call.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Endpoints:
+
+- `GET /health` — healthcheck
+- `GET /` — metadata
+- `GET /transcript?id=<videoId>&format=txt|json|srt|vtt&lang=en&lang=en-US&download=1` — fetch transcript in various formats
+- `GET /transcript/available?id=<videoId>` — list available tracks for debugging
+
+Environment variables:
+
+- `PORT` (default: 8000)
+- `FLASK_DEBUG` ("true" to enable debug)
+- `CORS_ALLOW_ORIGINS` (default: `*`)
+- `RATE_LIMIT_PER_MINUTE` (default: 60)
+- `CACHE_MAX_AGE_SECONDS` (default: 600)
+- `TRANSCRIPT_SERVER_URL` (Next.js side; default: `http://127.0.0.1:8000`)
+- Optional proxy (helps avoid IP bans):
+  - `YTA_WEBSHARE_USERNAME`, `YTA_WEBSHARE_PASSWORD`, `YTA_PROXY_COUNTRIES`
+  - or `YTA_HTTP_PROXY`, `YTA_HTTPS_PROXY` (falls back to `HTTP_PROXY`/`HTTPS_PROXY`)
+
+Install and run on Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+$env:PORT = 8000
+python serve.py
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+In Next.js, set `TRANSCRIPT_SERVER_URL` in `.env.local` if you change the port.
