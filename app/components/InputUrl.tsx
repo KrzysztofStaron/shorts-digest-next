@@ -19,7 +19,7 @@ export default function InputUrl({ defaultValue }: Props) {
         placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
         disabled={pending}
         aria-disabled={pending}
-        className="w-full rounded-xl border-2 border-slate-200 px-4 py-4 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full rounded-xl border-2 border-slate-200 px-4 py-4 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-black"
       />
       <div className="absolute inset-y-0 right-0 flex items-center pr-4">
         {pending ? (

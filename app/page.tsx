@@ -237,19 +237,18 @@ export default async function Page() {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-slate-800">AI Summary Generated</h2>
-                <div className="ml-auto">
-                  <ButtonExportPdf />
-                </div>
               </div>
             </div>
 
             <div className="p-8">
-              <div className="max-w-none">{renderSummaryMarkdown(lastSummary)}</div>
+              <div id="summary-container" className="max-w-none">
+                {renderSummaryMarkdown(lastSummary)}
+              </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Powered by OpenAI Whisper & GPT</span>
-                  <span>Summary generated on server-side</span>
+                  <span>Powered by GPT-5</span>
+                  <span></span>
                 </div>
               </div>
             </div>

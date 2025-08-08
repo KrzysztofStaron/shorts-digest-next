@@ -4,6 +4,7 @@ import sys
 import tempfile
 import json
 import hashlib
+import argparse
 from datetime import datetime
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
@@ -263,5 +264,31 @@ def index():
         }
     })
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(description="Transcript Server")
+    parser.add_argument("-p", "--port", type=int, default=None, help="Port to bind (overrides PORT env var)")
+    parser.add_argument("--host", type=str, default=None, help="Host interface to bind (overrides HOST env var)")
+    parser.add_argument("--no-debug", action="store_true", help="Disable Flask debug mode (or set FLASK_DEBUG=false)")
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    args = _parse_args()
+
+    default_port = int(os.getenv("PORT", "5000"))
+    default_host = os.getenv("HOST", "0.0.0.0")
+    debug_env = _env_bool("FLASK_DEBUG", True)
+
+    port = args.port if args.port is not None else default_port
+    host = args.host if args.host is not None else default_host
+    debug = False if args.no_debug else debug_env
+
+    print(f"[server] Starting on http://{host}:{port} (debug={'on' if debug else 'off'})")
+    app.run(debug=debug, host=host, port=port)

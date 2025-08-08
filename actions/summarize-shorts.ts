@@ -99,16 +99,17 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
 
   const prompt = `
     {
-      task: "Create actionable insights from the following YouTube Shorts transcript.",
+      task: "Create summary of the youtube video based on the transcript",
       highlighting: "wrap the most important 1–3 word(s) or short phrase(s) in bold+italic markdown like this: ***critical phrase***. Those will be highlighted with a highligher, use this sporadically",
       structure: "
         Main point:
         - 1–2 bullets capturing the single most important takeaway (up to 3 for longer videos).
         Actionable key insights:
-        - 3–7 concise, imperative bullets focused only on concrete, actionable steps or key insights.
+        - concise, bullets focused only on concrete, actionable steps or key insights.
+        - you can use headings to structure the content, but don't overdo it
       ",
       addingImages: "![Alt text](Detailed explanation of the image, will be used to generate the image)",
-      addingImagesGuide: "You can add images when you think it's relevant to the content, but don't overdo it",
+      addingImagesGuide: "You can add images when you think it's relevant to the content, you're not forced to add images, and you can add it to every single place if you want to, try not to generate diagrams or charts",
       transcript: ${transcriptText},
       output_format: "markdown",
       output_language: "en",
@@ -121,7 +122,6 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
       input: prompt,
-      temperature: 0.1,
     });
 
     const summary = (response as any).output_text?.trim?.() ?? "";
