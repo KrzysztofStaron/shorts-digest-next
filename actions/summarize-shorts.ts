@@ -97,30 +97,30 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
 
   const client = new OpenAI({ apiKey });
 
-  const prompt = [
-    "Using the following YouTube Shorts transcript, produce two sections in English only.",
-    "",
-    "Main point(s):",
-    "- 1–2 bullets capturing the single most important takeaway (up to 3 for longer videos).",
-    "",
-    "Actionable key insights:",
-    "- 3–7 concise, imperative bullets focused only on concrete, actionable steps or key insights.",
-    "",
-    "Rules:",
-    '- Bullets only (use "- "), no intro or outro.',
-    "- No fluff, no repetition, no emojis, no links.",
-    "- Be specific and practical.",
-    "",
-    "Transcript:",
-    transcriptText,
-  ].join("\n");
+  const prompt = `
+    {
+      task: "Create actionable insights from the following YouTube Shorts transcript.",
+      highlighting: "wrap the most important 1–3 word(s) or short phrase(s) in bold+italic markdown like this: ***critical phrase***. Those will be highlighted with a highligher, use this sporadically",
+      structure: "
+        Main point:
+        - 1–2 bullets capturing the single most important takeaway (up to 3 for longer videos).
+        Actionable key insights:
+        - 3–7 concise, imperative bullets focused only on concrete, actionable steps or key insights.
+      ",
+
+      transcript: ${transcriptText},
+      output_format: "markdown",
+      output_language: "en",
+      output_style: "concise, actionable, bullet points, tough love",
+      length: "short"
+    }
+  `;
 
   try {
     const response = await client.responses.create({
-      model: "gpt-4.1-nano-2025-04-14",
+      model: "gpt-4.1-mini",
       input: prompt,
-      temperature: 0.2,
-      max_output_tokens: 500,
+      temperature: 0.0,
     });
 
     const summary = (response as any).output_text?.trim?.() ?? "";
