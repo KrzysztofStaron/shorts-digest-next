@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { summarizeShorts } from "@/actions/summarize-shorts";
+import InputUrl from "./components/InputUrl";
+import ButtonSubmitGenerate from "./components/ButtonSubmitGenerate";
 import type { ReactNode } from "react";
+import ImageFromPrompt from "./components/ImageFromPrompt";
 
 function emphasizeKeywordsFromMarkup(text: string) {
   // Replace ***highlight*** sequences with orange-highlighted markup
@@ -46,6 +49,50 @@ function renderSummaryMarkdown(summary: string) {
     const line = rawLine.trim();
     if (line.length === 0) {
       flushList();
+      return;
+    }
+
+    // Parse inline images in the form: ![Alt](Prompt to generate the image)
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    if (imageRegex.test(line)) {
+      flushList();
+      imageRegex.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      let lastIndex = 0;
+      const rowChildren: ReactNode[] = [];
+      while ((match = imageRegex.exec(line))) {
+        const start = match.index;
+        const end = start + match[0].length;
+        const before = line.slice(lastIndex, start).trim();
+        if (before) {
+          rowChildren.push(
+            <p key={`p-before-img-${idx}-${start}`} className="text-slate-700 leading-relaxed">
+              {emphasizeKeywordsFromMarkup(before)}
+            </p>
+          );
+        }
+        const alt = match[1] || "Generated image";
+        const prompt = match[2];
+        rowChildren.push(
+          <div key={`img-${idx}-${start}`} className="my-4">
+            <ImageFromPrompt alt={alt} prompt={prompt} />
+          </div>
+        );
+        lastIndex = end;
+      }
+      const after = line.slice(lastIndex).trim();
+      if (after) {
+        rowChildren.push(
+          <p key={`p-after-img-${idx}-${lastIndex}`} className="text-slate-700 leading-relaxed">
+            {emphasizeKeywordsFromMarkup(after)}
+          </p>
+        );
+      }
+      elements.push(
+        <div key={`img-block-${idx}`} className="space-y-2">
+          {rowChildren}
+        </div>
+      );
       return;
     }
 
@@ -116,39 +163,11 @@ export default async function Page() {
               <label htmlFor="url" className="block text-sm font-semibold text-slate-700">
                 YouTube Video URL
               </label>
-              <div className="relative">
-                <input
-                  id="url"
-                  name="url"
-                  type="url"
-                  required
-                  defaultValue={lastUrl}
-                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                  className="w-full rounded-xl border-2 border-slate-200 px-4 py-4 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                    />
-                  </svg>
-                </div>
-              </div>
+              <InputUrl defaultValue={lastUrl} />
             </div>
 
             <div className="flex items-center gap-4">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                Generate Summary
-              </button>
+              <ButtonSubmitGenerate />
 
               <a
                 href="https://www.youtube.com"

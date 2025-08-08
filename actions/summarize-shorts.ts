@@ -107,7 +107,8 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
         Actionable key insights:
         - 3–7 concise, imperative bullets focused only on concrete, actionable steps or key insights.
       ",
-
+      addingImages: "![Alt text](Detailed explanation of the image, will be used to generate the image)",
+      addingImagesGuide: "You can add images when you think it's relevant to the content, but don't overdo it",
       transcript: ${transcriptText},
       output_format: "markdown",
       output_language: "en",
@@ -120,7 +121,7 @@ export async function summarizeShorts(formData: FormData): Promise<void> {
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
       input: prompt,
-      temperature: 0.0,
+      temperature: 0.1,
     });
 
     const summary = (response as any).output_text?.trim?.() ?? "";
