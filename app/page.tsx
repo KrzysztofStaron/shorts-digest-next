@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { summarizeShorts } from "@/actions/summarize-shorts";
-import InputUrl from "./components/InputUrl";
+import InputUrlWithPreview from "./components/InputUrlWithPreview";
 import ButtonSubmitGenerate from "./components/ButtonSubmitGenerate";
 import ButtonExportPdf from "./components/ButtonExportPdf";
 import type { ReactNode } from "react";
@@ -223,7 +223,7 @@ export default async function Page() {
               <label htmlFor="url" className="block text-sm font-semibold text-slate-700">
                 YouTube Video URL
               </label>
-              <InputUrl defaultValue={lastUrl} />
+              <InputUrlWithPreview defaultValue={lastUrl} />
             </div>
 
             <div className="flex items-center gap-4">

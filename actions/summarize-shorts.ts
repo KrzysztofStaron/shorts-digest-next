@@ -1,23 +1,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import OpenAI from "openai";
-
-function extractVideoId(rawUrl: string): string | null {
-  try {
-    const u = new URL(rawUrl);
-    if (u.hostname.includes("youtube.com")) {
-      if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || null;
-      const v = u.searchParams.get("v");
-      if (v) return v;
-    }
-    if (u.hostname.includes("youtu.be")) {
-      return u.pathname.replace("/", "");
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { extractVideoId } from "@/lib/youtube";
 
 async function fetchTranscriptTextFromServer(videoId: string): Promise<string> {
   const base = process.env.TRANSCRIPT_SERVER_URL || "http://127.0.0.1:5000";
